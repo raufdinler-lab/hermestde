@@ -1,0 +1,549 @@
+"use client";
+
+import { ChangeEvent, useMemo, useRef, useState } from "react";
+
+type Slot = {
+  id: string;
+  label: string;
+  hint: string;
+  dataUrl: string | null;
+};
+
+type LoadedSlot = Slot & {
+  image: HTMLImageElement | null;
+};
+
+const initialSlots: Slot[] = [
+  { id: "front", label: "Front View", hint: "Frontal documentation", dataUrl: null },
+  { id: "top", label: "Top View", hint: "Crown and top area", dataUrl: null },
+  { id: "right", label: "Right Profile", hint: "Right-side angle", dataUrl: null },
+  { id: "left", label: "Left Profile", hint: "Left-side angle", dataUrl: null },
+];
+
+const consentStatement =
+  "The entire operation plan and hairline were determined with my approval. I approve the operation plan and my hairline.";
+
+const baseExportWidth = 1800;
+const baseExportHeight = 1600;
+const basePadding = 84;
+const baseGap = 34;
+const baseCardHeight = 430;
+const baseCardTop = 250;
+const minExportScale = 2;
+const maxExportScale = 4;
+
+export default function Home() {
+  const [slots, setSlots] = useState(initialSlots);
+  const [graftCount, setGraftCount] = useState("");
+  const [isExporting, setIsExporting] = useState(false);
+  const inputRefs = useRef<Record<string, HTMLInputElement | null>>({});
+
+  const filledCount = useMemo(
+    () => slots.filter((slot) => Boolean(slot.dataUrl)).length,
+    [slots]
+  );
+
+  const handleSelect = (slotId: string) => {
+    inputRefs.current[slotId]?.click();
+  };
+
+  const handleFileChange = (slotId: string, event: ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+
+    if (!file) {
+      return;
+    }
+
+    const reader = new FileReader();
+
+    reader.onload = () => {
+      const result = typeof reader.result === "string" ? reader.result : null;
+
+      if (!result) {
+        return;
+      }
+
+      setSlots((current) =>
+        current.map((slot) =>
+          slot.id === slotId ? { ...slot, dataUrl: result } : slot
+        )
+      );
+    };
+
+    reader.readAsDataURL(file);
+    event.target.value = "";
+  };
+
+  const handleClear = (slotId: string) => {
+    setSlots((current) =>
+      current.map((slot) =>
+        slot.id === slotId ? { ...slot, dataUrl: null } : slot
+      )
+    );
+  };
+
+  const exportCollage = async () => {
+    setIsExporting(true);
+
+    try {
+      await document.fonts.ready;
+
+      const loadedSlots = await Promise.all(
+        slots.map(async (slot) => ({
+          ...slot,
+          image: slot.dataUrl ? await loadImage(slot.dataUrl) : null,
+        }))
+      );
+      const exportScale = getAdaptiveExportScale(loadedSlots);
+
+      const canvas = document.createElement("canvas");
+      canvas.width = Math.round(baseExportWidth * exportScale);
+      canvas.height = Math.round(baseExportHeight * exportScale);
+
+      const ctx = canvas.getContext("2d");
+
+      if (!ctx) {
+        throw new Error("Canvas context not available");
+      }
+
+      ctx.imageSmoothingEnabled = true;
+      ctx.imageSmoothingQuality = "high";
+
+      drawBackground(ctx, canvas.width, canvas.height, exportScale);
+
+      const padding = basePadding * exportScale;
+      const gap = baseGap * exportScale;
+      const cardWidth = (canvas.width - padding * 2 - gap) / 2;
+      const cardHeight = baseCardHeight * exportScale;
+
+      drawHeader(ctx, canvas.width, padding, exportScale);
+
+      const positions = [
+        { x: padding, y: baseCardTop * exportScale },
+        { x: padding + cardWidth + gap, y: baseCardTop * exportScale },
+        { x: padding, y: baseCardTop * exportScale + cardHeight + gap },
+        { x: padding + cardWidth + gap, y: baseCardTop * exportScale + cardHeight + gap },
+      ];
+
+      await Promise.all(
+        loadedSlots.map(async (slot, index) => {
+          await drawSlot(
+            ctx,
+            slot,
+            positions[index],
+            cardWidth,
+            cardHeight,
+            exportScale
+          );
+        })
+      );
+
+      drawConsentFooter(
+        ctx,
+        canvas.width,
+        canvas.height,
+        padding,
+        exportScale,
+        graftCount
+      );
+
+      const link = document.createElement("a");
+      const now = new Date();
+      const stamp = now.toISOString().slice(0, 10);
+
+      link.download = `hermest-visual-consent-sheet-${stamp}.png`;
+      link.href = canvas.toDataURL("image/png");
+      link.click();
+    } finally {
+      setIsExporting(false);
+    }
+  };
+
+  return (
+    <main className="page-shell">
+      <section className="hero-card">
+        <div className="hero-copy">
+          <span className="eyebrow">Hermest Clinic</span>
+          <h1>Pre-Procedure Visual Consent Sheet</h1>
+          <p>
+            Create a clear four-angle patient record for consultation and
+            consent documentation. Images stay proportionate and export as a
+            single branded sheet.
+          </p>
+        </div>
+
+        <div className="hero-stats">
+          <div className="stat-box">
+            <strong>{filledCount}/4</strong>
+            <span>Images placed</span>
+          </div>
+          <label className="input-stack">
+            <span>Graft Count</span>
+            <input
+              type="text"
+              inputMode="numeric"
+              placeholder="e.g. 4200"
+              value={graftCount}
+              onChange={(event) =>
+                setGraftCount(event.target.value.replace(/[^\d]/g, ""))
+              }
+            />
+          </label>
+          <p className="stat-note">Prepared for clinical review and patient approval</p>
+          <button
+            className="download-button"
+            onClick={exportCollage}
+            disabled={filledCount === 0 || isExporting}
+          >
+            {isExporting ? "Preparing..." : "Download Consent Sheet"}
+          </button>
+        </div>
+      </section>
+
+      <section className="grid-section">
+        {slots.map((slot) => (
+          <article key={slot.id} className="slot-card">
+            <div
+              className={`image-dropzone ${slot.dataUrl ? "filled" : ""}`}
+              onClick={() => handleSelect(slot.id)}
+              role="button"
+              tabIndex={0}
+              onKeyDown={(event) => {
+                if (event.key === "Enter" || event.key === " ") {
+                  event.preventDefault();
+                  handleSelect(slot.id);
+                }
+              }}
+            >
+              {slot.dataUrl ? (
+                // img is preferable here because files come from local user selection.
+                <img src={slot.dataUrl} alt={slot.label} className="slot-image" />
+              ) : (
+                <div className="placeholder-copy">
+                  <span>Add Image</span>
+                  <small>{slot.hint}</small>
+                </div>
+              )}
+            </div>
+
+            <div className="slot-footer">
+              <div>
+                <h2>{slot.label}</h2>
+                <p>{slot.hint}</p>
+              </div>
+
+              {slot.dataUrl ? (
+                <button
+                  type="button"
+                  className="secondary-button"
+                  onClick={() => handleClear(slot.id)}
+                >
+                  Clear
+                </button>
+              ) : null}
+            </div>
+
+            <input
+              ref={(node) => {
+                inputRefs.current[slot.id] = node;
+              }}
+              className="hidden-input"
+              type="file"
+              accept="image/*"
+              capture="environment"
+              onChange={(event) => handleFileChange(slot.id, event)}
+            />
+          </article>
+        ))}
+      </section>
+    </main>
+  );
+}
+
+function drawBackground(
+  ctx: CanvasRenderingContext2D,
+  width: number,
+  height: number,
+  exportScale: number
+) {
+  const gradient = ctx.createLinearGradient(0, 0, width, height);
+  gradient.addColorStop(0, "#003E51");
+  gradient.addColorStop(0.55, "#007FA3");
+  gradient.addColorStop(1, "#77C5D5");
+
+  ctx.fillStyle = gradient;
+  ctx.fillRect(0, 0, width, height);
+
+  ctx.fillStyle = "rgba(255, 255, 255, 0.06)";
+  ctx.beginPath();
+  ctx.arc(
+    width - 180 * exportScale,
+    170 * exportScale,
+    120 * exportScale,
+    0,
+    Math.PI * 2
+  );
+  ctx.fill();
+
+  ctx.beginPath();
+  ctx.arc(120 * exportScale, height - 140 * exportScale, 90 * exportScale, 0, Math.PI * 2);
+  ctx.fill();
+}
+
+function drawHeader(
+  ctx: CanvasRenderingContext2D,
+  width: number,
+  padding: number,
+  exportScale: number
+) {
+  ctx.fillStyle = "#ffffff";
+  ctx.font = `700 ${44 * exportScale}px Roboto`;
+  ctx.fillText("Hermest Clinic", padding, 92 * exportScale);
+
+  ctx.fillStyle = "#D1DDE6";
+  ctx.font = `500 ${18 * exportScale}px Roboto`;
+  ctx.fillText("PRE-PROCEDURE DOCUMENTATION", padding, 128 * exportScale);
+
+  ctx.fillStyle = "rgba(255, 255, 255, 0.92)";
+  ctx.font = `400 ${26 * exportScale}px Roboto`;
+  ctx.fillText("Visual Consent Sheet", padding, 162 * exportScale);
+
+  ctx.fillStyle = "rgba(255, 255, 255, 0.78)";
+  ctx.font = `400 ${18 * exportScale}px Roboto`;
+  const dateLabel = new Intl.DateTimeFormat("en-GB", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+  }).format(new Date());
+  ctx.fillText(dateLabel, width - padding - 120 * exportScale, 92 * exportScale);
+}
+
+function drawConsentFooter(
+  ctx: CanvasRenderingContext2D,
+  width: number,
+  height: number,
+  padding: number,
+  exportScale: number,
+  graftCount: string
+) {
+  const footerX = padding;
+  const footerY = 1180 * exportScale;
+  const footerWidth = width - padding * 2;
+  const footerHeight = 270 * exportScale;
+  const badgeHeight = 74 * exportScale;
+
+  roundedRect(ctx, footerX, footerY, footerWidth, footerHeight, 26 * exportScale);
+  ctx.fillStyle = "rgba(255, 255, 255, 0.96)";
+  ctx.fill();
+
+  ctx.strokeStyle = "rgba(0, 62, 81, 0.12)";
+  ctx.lineWidth = 2 * exportScale;
+  ctx.stroke();
+
+  const badgeWidth = 260 * exportScale;
+  roundedRect(
+    ctx,
+    footerX + 30 * exportScale,
+    footerY + 30 * exportScale,
+    badgeWidth,
+    badgeHeight,
+    18 * exportScale
+  );
+  ctx.fillStyle = "#003E51";
+  ctx.fill();
+
+  ctx.fillStyle = "#D1DDE6";
+  ctx.font = `500 ${18 * exportScale}px Roboto`;
+  ctx.fillText("GRAFT COUNT", footerX + 56 * exportScale, footerY + 60 * exportScale);
+
+  ctx.fillStyle = "#ffffff";
+  ctx.font = `700 ${28 * exportScale}px Roboto`;
+  ctx.fillText(
+    graftCount.trim() ? graftCount.trim() : "-",
+    footerX + 56 * exportScale,
+    footerY + 95 * exportScale
+  );
+
+  ctx.fillStyle = "#003E51";
+  ctx.font = `400 ${24 * exportScale}px Roboto`;
+  wrapText(
+    ctx,
+    consentStatement,
+    footerX + 30 * exportScale,
+    footerY + 150 * exportScale,
+    footerWidth - 60 * exportScale,
+    38 * exportScale
+  );
+
+  ctx.fillStyle = "#6f8f9a";
+  ctx.font = `400 ${16 * exportScale}px Roboto`;
+  ctx.fillText(
+    "Prepared by Hermest Clinic",
+    footerX + 30 * exportScale,
+    height - 40 * exportScale
+  );
+}
+
+async function drawSlot(
+  ctx: CanvasRenderingContext2D,
+  slot: LoadedSlot,
+  position: { x: number; y: number },
+  width: number,
+  height: number,
+  exportScale: number
+) {
+  const { x, y } = position;
+
+  roundedRect(ctx, x, y, width, height, 26 * exportScale);
+  ctx.fillStyle = "rgba(255, 255, 255, 0.98)";
+  ctx.fill();
+
+  ctx.strokeStyle = "rgba(0, 62, 81, 0.12)";
+  ctx.lineWidth = 2 * exportScale;
+  ctx.stroke();
+
+  ctx.fillStyle = "#003E51";
+  ctx.font = `700 ${28 * exportScale}px Roboto`;
+  ctx.fillText(slot.label, x + 26 * exportScale, y + 42 * exportScale);
+
+  ctx.fillStyle = "#4f8191";
+  ctx.font = `400 ${19 * exportScale}px Roboto`;
+  ctx.fillText(slot.hint, x + 26 * exportScale, y + 74 * exportScale);
+
+  const innerX = x + 24 * exportScale;
+  const innerY = y + 98 * exportScale;
+  const innerWidth = width - 48 * exportScale;
+  const innerHeight = height - 122 * exportScale;
+
+  roundedRect(ctx, innerX, innerY, innerWidth, innerHeight, 18 * exportScale);
+  ctx.fillStyle = "#f7fbfd";
+  ctx.fill();
+
+  if (slot.image) {
+    drawContainedImage(ctx, slot.image, innerX, innerY, innerWidth, innerHeight);
+    return;
+  }
+
+  ctx.fillStyle = "#6eaec0";
+  ctx.font = `600 ${24 * exportScale}px Roboto`;
+  ctx.fillText(
+    "No image added",
+    innerX + 26 * exportScale,
+    innerY + innerHeight / 2 - 10 * exportScale
+  );
+  ctx.font = `400 ${18 * exportScale}px Roboto`;
+  ctx.fillText(
+    "Tap to place the requested view",
+    innerX + 26 * exportScale,
+    innerY + innerHeight / 2 + 24 * exportScale
+  );
+}
+
+function drawContainedImage(
+  ctx: CanvasRenderingContext2D,
+  image: HTMLImageElement,
+  x: number,
+  y: number,
+  width: number,
+  height: number
+) {
+  const imageRatio = image.width / image.height;
+  const frameRatio = width / height;
+
+  let drawWidth = width;
+  let drawHeight = height;
+
+  if (imageRatio > frameRatio) {
+    drawHeight = width / imageRatio;
+  } else {
+    drawWidth = height * imageRatio;
+  }
+
+  const offsetX = x + (width - drawWidth) / 2;
+  const offsetY = y + (height - drawHeight) / 2;
+
+  ctx.drawImage(image, offsetX, offsetY, drawWidth, drawHeight);
+}
+
+function roundedRect(
+  ctx: CanvasRenderingContext2D,
+  x: number,
+  y: number,
+  width: number,
+  height: number,
+  radius: number
+) {
+  ctx.beginPath();
+  ctx.moveTo(x + radius, y);
+  ctx.lineTo(x + width - radius, y);
+  ctx.quadraticCurveTo(x + width, y, x + width, y + radius);
+  ctx.lineTo(x + width, y + height - radius);
+  ctx.quadraticCurveTo(x + width, y + height, x + width - radius, y + height);
+  ctx.lineTo(x + radius, y + height);
+  ctx.quadraticCurveTo(x, y + height, x, y + height - radius);
+  ctx.lineTo(x, y + radius);
+  ctx.quadraticCurveTo(x, y, x + radius, y);
+  ctx.closePath();
+}
+
+function wrapText(
+  ctx: CanvasRenderingContext2D,
+  text: string,
+  x: number,
+  y: number,
+  maxWidth: number,
+  lineHeight: number
+) {
+  const words = text.split(" ");
+  let line = "";
+  let currentY = y;
+
+  for (const word of words) {
+    const testLine = line ? `${line} ${word}` : word;
+    const testWidth = ctx.measureText(testLine).width;
+
+    if (testWidth > maxWidth && line) {
+      ctx.fillText(line, x, currentY);
+      line = word;
+      currentY += lineHeight;
+      continue;
+    }
+
+    line = testLine;
+  }
+
+  if (line) {
+    ctx.fillText(line, x, currentY);
+  }
+}
+
+function getAdaptiveExportScale(slots: LoadedSlot[]) {
+  const baseCardWidth = (baseExportWidth - basePadding * 2 - baseGap) / 2;
+  const baseInnerWidth = baseCardWidth - 48;
+  const baseInnerHeight = baseCardHeight - 122;
+
+  const sourceScaleCandidates = slots
+    .filter((slot) => Boolean(slot.image))
+    .map((slot) => {
+      const image = slot.image!;
+      return Math.min(image.width / baseInnerWidth, image.height / baseInnerHeight);
+    })
+    .filter((value) => Number.isFinite(value) && value > 0);
+
+  if (sourceScaleCandidates.length === 0) {
+    return minExportScale;
+  }
+
+  const adaptiveScale = Math.max(...sourceScaleCandidates);
+  return Math.max(minExportScale, Math.min(maxExportScale, adaptiveScale));
+}
+
+function loadImage(src: string) {
+  return new Promise<HTMLImageElement>((resolve, reject) => {
+    const image = new Image();
+
+    image.onload = () => resolve(image);
+    image.onerror = reject;
+    image.src = src;
+  });
+}
