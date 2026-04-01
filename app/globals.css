@@ -147,6 +147,27 @@ canvas {
   position: relative;
 }
 
+.country-preview {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 8px;
+  padding: 12px 14px;
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+.country-flag {
+  font-size: 1.15rem;
+  line-height: 1;
+}
+
+.country-name {
+  color: #ffffff;
+  font-weight: 600;
+}
+
 .stack-select {
   width: 100%;
   appearance: none;

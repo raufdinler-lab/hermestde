@@ -62,7 +62,17 @@ const countryOptions: CountryOption[] = countryCodes
     flag: getFlagEmoji(code),
     name: regionNames.of(code) ?? code,
   }))
-  .sort((a, b) => a.name.localeCompare(b.name));
+  .sort((a, b) => {
+    if (a.code === "US") {
+      return -1;
+    }
+
+    if (b.code === "US") {
+      return 1;
+    }
+
+    return a.name.localeCompare(b.name);
+  });
 
 const baseExportWidth = 1600;
 const baseExportHeight = 2350;
@@ -76,7 +86,7 @@ const maxExportScale = 4;
 export default function Home() {
   const [slots, setSlots] = useState(initialSlots);
   const [patientName, setPatientName] = useState("");
-  const [countryCode, setCountryCode] = useState(countryOptions[0].code);
+  const [countryCode, setCountryCode] = useState("US");
   const [treatmentMethod, setTreatmentMethod] = useState(treatmentMethodOptions[0]);
   const [graftCount, setGraftCount] = useState("");
   const [isExporting, setIsExporting] = useState(false);
@@ -377,6 +387,10 @@ export default function Home() {
           <label className="input-stack">
             <span>Patient Country</span>
             <div className="select-wrap">
+              <div className="country-preview" aria-hidden="true">
+                <span className="country-flag">{selectedCountry.flag}</span>
+                <span className="country-name">{selectedCountry.name}</span>
+              </div>
               <select
                 value={countryCode}
                 onChange={(event) => setCountryCode(event.target.value)}
@@ -384,7 +398,7 @@ export default function Home() {
               >
                 {countryOptions.map((country) => (
                   <option key={country.code} value={country.code}>
-                    {country.flag} {country.name}
+                    {country.name}
                   </option>
                 ))}
               </select>
