@@ -657,10 +657,6 @@ function drawConsentFooter(
   ctx.lineTo(signatureBoxX + signatureBoxWidth, signatureBoxY + signatureBoxHeight);
   ctx.stroke();
 
-  ctx.fillStyle = "#6f8f9a";
-  ctx.font = `500 ${14 * exportScale}px Roboto`;
-  ctx.fillText("Advisor Signature", signatureBoxX, signatureBoxY + signatureBoxHeight + 24 * exportScale);
-
   if (signatureImage) {
     drawContainedImage(
       ctx,
