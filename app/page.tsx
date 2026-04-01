@@ -1,6 +1,6 @@
 "use client";
 
-import { ChangeEvent, useMemo, useRef, useState } from "react";
+import { ChangeEvent, PointerEvent, useEffect, useMemo, useRef, useState } from "react";
 
 type Slot = {
   id: string;
@@ -37,6 +37,10 @@ export default function Home() {
   const [graftCount, setGraftCount] = useState("");
   const [isExporting, setIsExporting] = useState(false);
   const inputRefs = useRef<Record<string, HTMLInputElement | null>>({});
+  const signatureCanvasRef = useRef<HTMLCanvasElement | null>(null);
+  const [signatureDataUrl, setSignatureDataUrl] = useState<string | null>(null);
+  const isDrawingRef = useRef(false);
+  const lastPointRef = useRef<{ x: number; y: number } | null>(null);
 
   const filledCount = useMemo(
     () => slots.filter((slot) => Boolean(slot.dataUrl)).length,
@@ -80,6 +84,137 @@ export default function Home() {
         slot.id === slotId ? { ...slot, dataUrl: null } : slot
       )
     );
+  };
+
+  useEffect(() => {
+    const canvas = signatureCanvasRef.current;
+
+    if (!canvas) {
+      return;
+    }
+
+    const syncCanvas = () => {
+      const rect = canvas.getBoundingClientRect();
+      const ratio = window.devicePixelRatio || 1;
+
+      canvas.width = Math.max(1, Math.round(rect.width * ratio));
+      canvas.height = Math.max(1, Math.round(rect.height * ratio));
+
+      const ctx = canvas.getContext("2d");
+
+      if (!ctx) {
+        return;
+      }
+
+      ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
+      ctx.lineCap = "round";
+      ctx.lineJoin = "round";
+      ctx.lineWidth = 2.4;
+      ctx.strokeStyle = "#003E51";
+
+      if (signatureDataUrl) {
+        const image = new Image();
+        image.onload = () => {
+          ctx.clearRect(0, 0, rect.width, rect.height);
+          ctx.drawImage(image, 0, 0, rect.width, rect.height);
+        };
+        image.src = signatureDataUrl;
+      } else {
+        ctx.clearRect(0, 0, rect.width, rect.height);
+      }
+    };
+
+    syncCanvas();
+    window.addEventListener("resize", syncCanvas);
+
+    return () => {
+      window.removeEventListener("resize", syncCanvas);
+    };
+  }, [signatureDataUrl]);
+
+  const getCanvasPoint = (event: PointerEvent<HTMLCanvasElement>) => {
+    const canvas = signatureCanvasRef.current;
+
+    if (!canvas) {
+      return null;
+    }
+
+    const rect = canvas.getBoundingClientRect();
+    return {
+      x: event.clientX - rect.left,
+      y: event.clientY - rect.top,
+    };
+  };
+
+  const startSignature = (event: PointerEvent<HTMLCanvasElement>) => {
+    const point = getCanvasPoint(event);
+    const canvas = signatureCanvasRef.current;
+    const ctx = canvas?.getContext("2d");
+
+    if (!point || !canvas || !ctx) {
+      return;
+    }
+
+    event.preventDefault();
+    canvas.setPointerCapture(event.pointerId);
+    isDrawingRef.current = true;
+    lastPointRef.current = point;
+
+    ctx.beginPath();
+    ctx.arc(point.x, point.y, 1.2, 0, Math.PI * 2);
+    ctx.fillStyle = "#003E51";
+    ctx.fill();
+  };
+
+  const moveSignature = (event: PointerEvent<HTMLCanvasElement>) => {
+    if (!isDrawingRef.current) {
+      return;
+    }
+
+    const point = getCanvasPoint(event);
+    const canvas = signatureCanvasRef.current;
+    const ctx = canvas?.getContext("2d");
+    const lastPoint = lastPointRef.current;
+
+    if (!point || !ctx || !lastPoint) {
+      return;
+    }
+
+    event.preventDefault();
+    ctx.beginPath();
+    ctx.moveTo(lastPoint.x, lastPoint.y);
+    ctx.lineTo(point.x, point.y);
+    ctx.stroke();
+    lastPointRef.current = point;
+  };
+
+  const endSignature = (event?: PointerEvent<HTMLCanvasElement>) => {
+    const canvas = signatureCanvasRef.current;
+
+    if (event && canvas?.hasPointerCapture(event.pointerId)) {
+      canvas.releasePointerCapture(event.pointerId);
+    }
+
+    if (!canvas) {
+      return;
+    }
+
+    isDrawingRef.current = false;
+    lastPointRef.current = null;
+    setSignatureDataUrl(canvas.toDataURL("image/png"));
+  };
+
+  const clearSignature = () => {
+    const canvas = signatureCanvasRef.current;
+    const ctx = canvas?.getContext("2d");
+
+    if (!canvas || !ctx) {
+      return;
+    }
+
+    const rect = canvas.getBoundingClientRect();
+    ctx.clearRect(0, 0, rect.width, rect.height);
+    setSignatureDataUrl(null);
   };
 
   const exportCollage = async () => {
@@ -144,7 +279,8 @@ export default function Home() {
         canvas.height,
         padding,
         exportScale,
-        graftCount
+        graftCount,
+        signatureDataUrl ? await loadImage(signatureDataUrl) : null
       );
 
       const link = document.createElement("a");
@@ -189,6 +325,26 @@ export default function Home() {
               }
             />
           </label>
+          <div className="input-stack">
+            <span>Signature</span>
+            <div className="signature-panel">
+              <canvas
+                ref={signatureCanvasRef}
+                className="signature-canvas"
+                onPointerDown={startSignature}
+                onPointerMove={moveSignature}
+                onPointerUp={endSignature}
+                onPointerLeave={endSignature}
+                onPointerCancel={endSignature}
+              />
+              <div className="signature-actions">
+                <small>Sign with finger or stylus</small>
+                <button type="button" className="secondary-button" onClick={clearSignature}>
+                  Clear Signature
+                </button>
+              </div>
+            </div>
+          </div>
           <p className="stat-note">Prepared for clinical review and patient approval</p>
           <button
             className="download-button"
@@ -324,7 +480,8 @@ function drawConsentFooter(
   height: number,
   padding: number,
   exportScale: number,
-  graftCount: string
+  graftCount: string,
+  signatureImage: HTMLImageElement | null
 ) {
   const footerX = padding;
   const footerY = 1180 * exportScale;
@@ -374,6 +531,33 @@ function drawConsentFooter(
     footerWidth - 60 * exportScale,
     38 * exportScale
   );
+
+  const signatureBoxWidth = 320 * exportScale;
+  const signatureBoxHeight = 96 * exportScale;
+  const signatureBoxX = footerX + footerWidth - signatureBoxWidth - 30 * exportScale;
+  const signatureBoxY = footerY + footerHeight - signatureBoxHeight - 42 * exportScale;
+
+  ctx.strokeStyle = "rgba(0, 62, 81, 0.22)";
+  ctx.lineWidth = 1.5 * exportScale;
+  ctx.beginPath();
+  ctx.moveTo(signatureBoxX, signatureBoxY + signatureBoxHeight);
+  ctx.lineTo(signatureBoxX + signatureBoxWidth, signatureBoxY + signatureBoxHeight);
+  ctx.stroke();
+
+  ctx.fillStyle = "#6f8f9a";
+  ctx.font = `500 ${14 * exportScale}px Roboto`;
+  ctx.fillText("Advisor Signature", signatureBoxX, signatureBoxY + signatureBoxHeight + 24 * exportScale);
+
+  if (signatureImage) {
+    drawContainedImage(
+      ctx,
+      signatureImage,
+      signatureBoxX,
+      signatureBoxY,
+      signatureBoxWidth,
+      signatureBoxHeight - 10 * exportScale
+    );
+  }
 
   ctx.fillStyle = "#6f8f9a";
   ctx.font = `400 ${16 * exportScale}px Roboto`;
