@@ -82,6 +82,10 @@ const baseCardHeight = 780;
 const baseCardTop = 360;
 const minExportScale = 2;
 const maxExportScale = 4;
+const mobileMaxExportScale = 2.2;
+const maxUploadWidth = 1800;
+const maxUploadHeight = 2400;
+const uploadQuality = 0.86;
 
 export default function Home() {
   const [slots, setSlots] = useState(initialSlots);
@@ -93,6 +97,7 @@ export default function Home() {
   const inputRefs = useRef<Record<string, HTMLInputElement | null>>({});
   const signatureCanvasRef = useRef<HTMLCanvasElement | null>(null);
   const [signatureDataUrl, setSignatureDataUrl] = useState<string | null>(null);
+  const signatureDataUrlRef = useRef<string | null>(null);
   const isDrawingRef = useRef(false);
   const lastPointRef = useRef<{ x: number; y: number } | null>(null);
 
@@ -114,23 +119,14 @@ export default function Home() {
       return;
     }
 
-    const reader = new FileReader();
-
-    reader.onload = () => {
-      const result = typeof reader.result === "string" ? reader.result : null;
-
-      if (!result) {
-        return;
-      }
-
+    void processImageFile(file).then((result) => {
       setSlots((current) =>
         current.map((slot) =>
           slot.id === slotId ? { ...slot, dataUrl: result } : slot
         )
       );
-    };
+    });
 
-    reader.readAsDataURL(file);
     event.target.value = "";
   };
 
@@ -149,9 +145,10 @@ export default function Home() {
       return;
     }
 
-    const syncCanvas = () => {
+    const syncCanvas = async () => {
       const rect = canvas.getBoundingClientRect();
       const ratio = window.devicePixelRatio || 1;
+      const previousSignature = signatureDataUrlRef.current;
 
       canvas.width = Math.max(1, Math.round(rect.width * ratio));
       canvas.height = Math.max(1, Math.round(rect.height * ratio));
@@ -162,21 +159,12 @@ export default function Home() {
         return;
       }
 
-      ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
-      ctx.lineCap = "round";
-      ctx.lineJoin = "round";
-      ctx.lineWidth = 2.4;
-      ctx.strokeStyle = "#003E51";
+      configureSignatureCanvas(ctx, ratio);
+      ctx.clearRect(0, 0, rect.width, rect.height);
 
-      if (signatureDataUrl) {
-        const image = new Image();
-        image.onload = () => {
-          ctx.clearRect(0, 0, rect.width, rect.height);
-          ctx.drawImage(image, 0, 0, rect.width, rect.height);
-        };
-        image.src = signatureDataUrl;
-      } else {
-        ctx.clearRect(0, 0, rect.width, rect.height);
+      if (previousSignature) {
+        const image = await loadImage(previousSignature);
+        ctx.drawImage(image, 0, 0, rect.width, rect.height);
       }
     };
 
@@ -186,7 +174,7 @@ export default function Home() {
     return () => {
       window.removeEventListener("resize", syncCanvas);
     };
-  }, [signatureDataUrl]);
+  }, []);
 
   const getCanvasPoint = (event: PointerEvent<HTMLCanvasElement>) => {
     const canvas = signatureCanvasRef.current;
@@ -257,7 +245,9 @@ export default function Home() {
 
     isDrawingRef.current = false;
     lastPointRef.current = null;
-    setSignatureDataUrl(canvas.toDataURL("image/png"));
+    const nextDataUrl = canvas.toDataURL("image/png");
+    signatureDataUrlRef.current = nextDataUrl;
+    setSignatureDataUrl(nextDataUrl);
   };
 
   const clearSignature = () => {
@@ -270,6 +260,7 @@ export default function Home() {
 
     const rect = canvas.getBoundingClientRect();
     ctx.clearRect(0, 0, rect.width, rect.height);
+    signatureDataUrlRef.current = null;
     setSignatureDataUrl(null);
   };
 
@@ -345,10 +336,12 @@ export default function Home() {
       const link = document.createElement("a");
       const now = new Date();
       const stamp = now.toISOString().slice(0, 10);
+      const blob = await canvasToBlob(canvas);
 
       link.download = `hermest-visual-consent-sheet-${stamp}.png`;
-      link.href = canvas.toDataURL("image/png");
+      link.href = URL.createObjectURL(blob);
       link.click();
+      setTimeout(() => URL.revokeObjectURL(link.href), 1000);
     } finally {
       setIsExporting(false);
     }
@@ -513,7 +506,6 @@ export default function Home() {
               className="hidden-input"
               type="file"
               accept="image/*"
-              capture="environment"
               onChange={(event) => handleFileChange(slot.id, event)}
             />
           </article>
@@ -838,11 +830,13 @@ function getAdaptiveExportScale(slots: LoadedSlot[]) {
     .filter((value) => Number.isFinite(value) && value > 0);
 
   if (sourceScaleCandidates.length === 0) {
-    return minExportScale;
+    return getDeviceAdjustedScale(minExportScale);
   }
 
   const adaptiveScale = Math.max(...sourceScaleCandidates);
-  return Math.max(minExportScale, Math.min(maxExportScale, adaptiveScale));
+  return getDeviceAdjustedScale(
+    Math.max(minExportScale, Math.min(maxExportScale, adaptiveScale))
+  );
 }
 
 function getFlagEmoji(countryCode: string) {
@@ -853,6 +847,41 @@ function getFlagEmoji(countryCode: string) {
     .join("");
 }
 
+async function processImageFile(file: File) {
+  const image = await loadImageFromFile(file);
+  const { width, height } = getContainSize(
+    image.width,
+    image.height,
+    maxUploadWidth,
+    maxUploadHeight
+  );
+
+  const canvas = document.createElement("canvas");
+  canvas.width = width;
+  canvas.height = height;
+
+  const ctx = canvas.getContext("2d");
+
+  if (!ctx) {
+    throw new Error("Could not prepare image canvas");
+  }
+
+  ctx.imageSmoothingEnabled = true;
+  ctx.imageSmoothingQuality = "high";
+  ctx.drawImage(image, 0, 0, width, height);
+
+  return canvas.toDataURL("image/jpeg", uploadQuality);
+}
+
+function configureSignatureCanvas(ctx: CanvasRenderingContext2D, ratio: number) {
+  ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
+  ctx.lineCap = "round";
+  ctx.lineJoin = "round";
+  ctx.lineWidth = 2.4;
+  ctx.strokeStyle = "#003E51";
+  ctx.fillStyle = "#003E51";
+}
+
 function loadImage(src: string) {
   return new Promise<HTMLImageElement>((resolve, reject) => {
     const image = new Image();
@@ -860,5 +889,64 @@ function loadImage(src: string) {
     image.onload = () => resolve(image);
     image.onerror = reject;
     image.src = src;
+  });
+}
+
+function loadImageFromFile(file: File) {
+  return new Promise<HTMLImageElement>((resolve, reject) => {
+    const reader = new FileReader();
+
+    reader.onload = () => {
+      const result = typeof reader.result === "string" ? reader.result : null;
+
+      if (!result) {
+        reject(new Error("Could not read selected image"));
+        return;
+      }
+
+      loadImage(result).then(resolve).catch(reject);
+    };
+
+    reader.onerror = () => reject(new Error("Could not load selected image"));
+    reader.readAsDataURL(file);
+  });
+}
+
+function getContainSize(
+  sourceWidth: number,
+  sourceHeight: number,
+  maxWidth: number,
+  maxHeight: number
+) {
+  const ratio = Math.min(maxWidth / sourceWidth, maxHeight / sourceHeight, 1);
+
+  return {
+    width: Math.max(1, Math.round(sourceWidth * ratio)),
+    height: Math.max(1, Math.round(sourceHeight * ratio)),
+  };
+}
+
+function getDeviceAdjustedScale(scale: number) {
+  if (typeof window === "undefined") {
+    return scale;
+  }
+
+  const isMobileViewport = window.innerWidth <= 820;
+  const isAppleMobile = /iPhone|iPad|iPod/i.test(navigator.userAgent);
+  const maxScale = isMobileViewport || isAppleMobile ? mobileMaxExportScale : maxExportScale;
+
+  return Math.min(scale, maxScale);
+}
+
+function canvasToBlob(canvas: HTMLCanvasElement) {
+  return new Promise<Blob>((resolve, reject) => {
+    canvas.toBlob((blob) => {
+      if (!blob) {
+        reject(new Error("Could not create image blob"));
+        return;
+      }
+
+      resolve(blob);
+    }, "image/png");
   });
 }
