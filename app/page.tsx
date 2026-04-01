@@ -13,6 +13,12 @@ type LoadedSlot = Slot & {
   image: HTMLImageElement | null;
 };
 
+type CountryOption = {
+  code: string;
+  flag: string;
+  name: string;
+};
+
 const initialSlots: Slot[] = [
   { id: "front", label: "Front View", hint: "Frontal documentation", dataUrl: null },
   { id: "top", label: "Top View", hint: "Crown and top area", dataUrl: null },
@@ -23,17 +29,55 @@ const initialSlots: Slot[] = [
 const consentStatement =
   "The entire operation plan and hairline were determined with my approval. I approve the operation plan and my hairline.";
 
-const baseExportWidth = 1800;
-const baseExportHeight = 1600;
+const treatmentMethodOptions = ["DHI METHOD", "SAPPHIRE FUE", "UNIQUE FUE"];
+const countryCodes = [
+  "AF", "AX", "AL", "DZ", "AS", "AD", "AO", "AI", "AQ", "AG", "AR", "AM",
+  "AW", "AU", "AT", "AZ", "BS", "BH", "BD", "BB", "BY", "BE", "BZ", "BJ",
+  "BM", "BT", "BO", "BQ", "BA", "BW", "BV", "BR", "IO", "BN", "BG", "BF",
+  "BI", "KH", "CM", "CA", "CV", "KY", "CF", "TD", "CL", "CN", "CX", "CC",
+  "CO", "KM", "CG", "CD", "CK", "CR", "CI", "HR", "CU", "CW", "CY", "CZ",
+  "DK", "DJ", "DM", "DO", "EC", "EG", "SV", "GQ", "ER", "EE", "SZ", "ET",
+  "FK", "FO", "FJ", "FI", "FR", "GF", "PF", "TF", "GA", "GM", "GE", "DE",
+  "GH", "GI", "GR", "GL", "GD", "GP", "GU", "GT", "GG", "GN", "GW", "GY",
+  "HT", "HM", "VA", "HN", "HK", "HU", "IS", "IN", "ID", "IR", "IQ", "IE",
+  "IM", "IL", "IT", "JM", "JP", "JE", "JO", "KZ", "KE", "KI", "KP", "KR",
+  "KW", "KG", "LA", "LV", "LB", "LS", "LR", "LY", "LI", "LT", "LU", "MO",
+  "MG", "MW", "MY", "MV", "ML", "MT", "MH", "MQ", "MR", "MU", "YT", "MX",
+  "FM", "MD", "MC", "MN", "ME", "MS", "MA", "MZ", "MM", "NA", "NR", "NP",
+  "NL", "NC", "NZ", "NI", "NE", "NG", "NU", "NF", "MK", "MP", "NO", "OM",
+  "PK", "PW", "PS", "PA", "PG", "PY", "PE", "PH", "PN", "PL", "PT", "PR",
+  "QA", "RE", "RO", "RU", "RW", "BL", "SH", "KN", "LC", "MF", "PM", "VC",
+  "WS", "SM", "ST", "SA", "SN", "RS", "SC", "SL", "SG", "SX", "SK", "SI",
+  "SB", "SO", "ZA", "GS", "SS", "ES", "LK", "SD", "SR", "SJ", "SE", "CH",
+  "SY", "TW", "TJ", "TZ", "TH", "TL", "TG", "TK", "TO", "TT", "TN", "TR",
+  "TM", "TC", "TV", "UG", "UA", "AE", "GB", "US", "UM", "UY", "UZ", "VU",
+  "VE", "VN", "VG", "VI", "WF", "EH", "YE", "ZM", "ZW",
+] as const;
+
+const regionNames = new Intl.DisplayNames(["en"], { type: "region" });
+
+const countryOptions: CountryOption[] = countryCodes
+  .map((code) => ({
+    code,
+    flag: getFlagEmoji(code),
+    name: regionNames.of(code) ?? code,
+  }))
+  .sort((a, b) => a.name.localeCompare(b.name));
+
+const baseExportWidth = 1600;
+const baseExportHeight = 2350;
 const basePadding = 84;
-const baseGap = 34;
-const baseCardHeight = 430;
-const baseCardTop = 250;
+const baseGap = 40;
+const baseCardHeight = 780;
+const baseCardTop = 360;
 const minExportScale = 2;
 const maxExportScale = 4;
 
 export default function Home() {
   const [slots, setSlots] = useState(initialSlots);
+  const [patientName, setPatientName] = useState("");
+  const [countryCode, setCountryCode] = useState(countryOptions[0].code);
+  const [treatmentMethod, setTreatmentMethod] = useState(treatmentMethodOptions[0]);
   const [graftCount, setGraftCount] = useState("");
   const [isExporting, setIsExporting] = useState(false);
   const inputRefs = useRef<Record<string, HTMLInputElement | null>>({});
@@ -46,6 +90,8 @@ export default function Home() {
     () => slots.filter((slot) => Boolean(slot.dataUrl)).length,
     [slots]
   );
+  const selectedCountry =
+    countryOptions.find((country) => country.code === countryCode) ?? countryOptions[0];
 
   const handleSelect = (slotId: string) => {
     inputRefs.current[slotId]?.click();
@@ -279,6 +325,9 @@ export default function Home() {
         canvas.height,
         padding,
         exportScale,
+        patientName,
+        selectedCountry,
+        treatmentMethod,
         graftCount,
         signatureDataUrl ? await loadImage(signatureDataUrl) : null
       );
@@ -299,8 +348,11 @@ export default function Home() {
     <main className="page-shell">
       <section className="hero-card">
         <div className="hero-copy">
-          <span className="eyebrow">Hermest Clinic</span>
-          <h1>Pre-Procedure Visual Consent Sheet</h1>
+          <div className="hero-heading">
+            <span className="eyebrow">Hermest Hair Clinic</span>
+            <p className="hero-kicker">Hair Transplant Surgery Planning Form</p>
+            <h1>Visual Consent Sheet</h1>
+          </div>
           <p>
             Create a clear four-angle patient record for consultation and
             consent documentation. Images stay proportionate and export as a
@@ -312,6 +364,47 @@ export default function Home() {
           <div className="stat-box">
             <strong>{filledCount}/4</strong>
             <span>Images placed</span>
+          </div>
+          <label className="input-stack">
+            <span>Patient Name</span>
+            <input
+              type="text"
+              placeholder="e.g. John Smith"
+              value={patientName}
+              onChange={(event) => setPatientName(event.target.value)}
+            />
+          </label>
+          <label className="input-stack">
+            <span>Patient Country</span>
+            <div className="select-wrap">
+              <select
+                value={countryCode}
+                onChange={(event) => setCountryCode(event.target.value)}
+                className="stack-select"
+              >
+                {countryOptions.map((country) => (
+                  <option key={country.code} value={country.code}>
+                    {country.flag} {country.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </label>
+          <div className="input-stack">
+            <span>Treatment Method</span>
+            <div className="method-grid" role="radiogroup" aria-label="Treatment Method">
+              {treatmentMethodOptions.map((option) => (
+                <button
+                  key={option}
+                  type="button"
+                  className={`method-chip ${treatmentMethod === option ? "active" : ""}`}
+                  onClick={() => setTreatmentMethod(option)}
+                  aria-pressed={treatmentMethod === option}
+                >
+                  {option}
+                </button>
+              ))}
+            </div>
           </div>
           <label className="input-stack">
             <span>Graft Count</span>
@@ -452,17 +545,20 @@ function drawHeader(
   padding: number,
   exportScale: number
 ) {
+  const centerX = width / 2;
+
   ctx.fillStyle = "#ffffff";
-  ctx.font = `700 ${44 * exportScale}px Roboto`;
-  ctx.fillText("Hermest Clinic", padding, 92 * exportScale);
+  ctx.textAlign = "center";
+  ctx.font = `700 ${34 * exportScale}px Roboto`;
+  ctx.fillText("Hermest Hair Clinic", centerX, 92 * exportScale);
 
   ctx.fillStyle = "#D1DDE6";
-  ctx.font = `500 ${18 * exportScale}px Roboto`;
-  ctx.fillText("PRE-PROCEDURE DOCUMENTATION", padding, 128 * exportScale);
+  ctx.font = `500 ${22 * exportScale}px Roboto`;
+  ctx.fillText("Hair Transplant Surgery Planning Form", centerX, 138 * exportScale);
 
   ctx.fillStyle = "rgba(255, 255, 255, 0.92)";
-  ctx.font = `400 ${26 * exportScale}px Roboto`;
-  ctx.fillText("Visual Consent Sheet", padding, 162 * exportScale);
+  ctx.font = `700 ${50 * exportScale}px Roboto`;
+  ctx.fillText("Visual Consent Sheet", centerX, 210 * exportScale);
 
   ctx.fillStyle = "rgba(255, 255, 255, 0.78)";
   ctx.font = `400 ${18 * exportScale}px Roboto`;
@@ -471,7 +567,9 @@ function drawHeader(
     month: "short",
     year: "numeric",
   }).format(new Date());
-  ctx.fillText(dateLabel, width - padding - 120 * exportScale, 92 * exportScale);
+  ctx.textAlign = "right";
+  ctx.fillText(dateLabel, width - padding, 92 * exportScale);
+  ctx.textAlign = "left";
 }
 
 function drawConsentFooter(
@@ -480,13 +578,16 @@ function drawConsentFooter(
   height: number,
   padding: number,
   exportScale: number,
+  patientName: string,
+  selectedCountry: CountryOption,
+  treatmentMethod: string,
   graftCount: string,
   signatureImage: HTMLImageElement | null
 ) {
   const footerX = padding;
-  const footerY = 1180 * exportScale;
+  const footerY = 2010 * exportScale;
   const footerWidth = width - padding * 2;
-  const footerHeight = 270 * exportScale;
+  const footerHeight = 250 * exportScale;
   const badgeHeight = 74 * exportScale;
 
   roundedRect(ctx, footerX, footerY, footerWidth, footerHeight, 26 * exportScale);
@@ -497,45 +598,51 @@ function drawConsentFooter(
   ctx.lineWidth = 2 * exportScale;
   ctx.stroke();
 
-  const badgeWidth = 260 * exportScale;
-  roundedRect(
-    ctx,
-    footerX + 30 * exportScale,
-    footerY + 30 * exportScale,
-    badgeWidth,
-    badgeHeight,
-    18 * exportScale
-  );
+  const metaItems = [
+    { label: "Patient Name", value: patientName.trim() || "-" },
+    {
+      label: "Country",
+      value: `${selectedCountry.flag} ${selectedCountry.name}`,
+    },
+    { label: "Method", value: treatmentMethod.trim() || "-" },
+    { label: "Graft Count", value: graftCount.trim() || "-" },
+  ];
+
+  const metaGap = 18 * exportScale;
+  const metaWidth = (footerWidth - 60 * exportScale - metaGap * 3) / 4;
+
+  metaItems.forEach((item, index) => {
+    const metaX = footerX + 30 * exportScale + index * (metaWidth + metaGap);
+    const metaY = footerY + 30 * exportScale;
+
+    roundedRect(ctx, metaX, metaY, metaWidth, badgeHeight, 18 * exportScale);
+    ctx.fillStyle = "#003E51";
+    ctx.fill();
+
+    ctx.fillStyle = "#D1DDE6";
+    ctx.font = `500 ${16 * exportScale}px Roboto`;
+    ctx.fillText(item.label.toUpperCase(), metaX + 24 * exportScale, metaY + 28 * exportScale);
+
+    ctx.fillStyle = "#ffffff";
+    ctx.font = `700 ${22 * exportScale}px Roboto`;
+    ctx.fillText(item.value, metaX + 24 * exportScale, metaY + 58 * exportScale);
+  });
+
   ctx.fillStyle = "#003E51";
-  ctx.fill();
-
-  ctx.fillStyle = "#D1DDE6";
-  ctx.font = `500 ${18 * exportScale}px Roboto`;
-  ctx.fillText("GRAFT COUNT", footerX + 56 * exportScale, footerY + 60 * exportScale);
-
-  ctx.fillStyle = "#ffffff";
-  ctx.font = `700 ${28 * exportScale}px Roboto`;
-  ctx.fillText(
-    graftCount.trim() ? graftCount.trim() : "-",
-    footerX + 56 * exportScale,
-    footerY + 95 * exportScale
-  );
-
-  ctx.fillStyle = "#003E51";
-  ctx.font = `400 ${24 * exportScale}px Roboto`;
+  ctx.font = `400 ${22 * exportScale}px Roboto`;
   wrapText(
     ctx,
     consentStatement,
     footerX + 30 * exportScale,
-    footerY + 150 * exportScale,
-    footerWidth - 60 * exportScale,
-    38 * exportScale
+    footerY + 138 * exportScale,
+    footerWidth - 440 * exportScale,
+    34 * exportScale
   );
 
-  const signatureBoxWidth = 320 * exportScale;
-  const signatureBoxHeight = 96 * exportScale;
+  const signatureBoxWidth = 360 * exportScale;
+  const signatureBoxHeight = 110 * exportScale;
   const signatureBoxX = footerX + footerWidth - signatureBoxWidth - 30 * exportScale;
-  const signatureBoxY = footerY + footerHeight - signatureBoxHeight - 42 * exportScale;
+  const signatureBoxY = footerY + 118 * exportScale;
 
   ctx.strokeStyle = "rgba(0, 62, 81, 0.22)";
   ctx.lineWidth = 1.5 * exportScale;
@@ -588,11 +695,13 @@ async function drawSlot(
 
   ctx.fillStyle = "#003E51";
   ctx.font = `700 ${28 * exportScale}px Roboto`;
-  ctx.fillText(slot.label, x + 26 * exportScale, y + 42 * exportScale);
+  ctx.textAlign = "center";
+  ctx.fillText(slot.label, x + width / 2, y + 42 * exportScale);
 
   ctx.fillStyle = "#4f8191";
   ctx.font = `400 ${19 * exportScale}px Roboto`;
-  ctx.fillText(slot.hint, x + 26 * exportScale, y + 74 * exportScale);
+  ctx.fillText(slot.hint, x + width / 2, y + 74 * exportScale);
+  ctx.textAlign = "left";
 
   const innerX = x + 24 * exportScale;
   const innerY = y + 98 * exportScale;
@@ -720,6 +829,14 @@ function getAdaptiveExportScale(slots: LoadedSlot[]) {
 
   const adaptiveScale = Math.max(...sourceScaleCandidates);
   return Math.max(minExportScale, Math.min(maxExportScale, adaptiveScale));
+}
+
+function getFlagEmoji(countryCode: string) {
+  return countryCode
+    .toUpperCase()
+    .split("")
+    .map((char) => String.fromCodePoint(127397 + char.charCodeAt(0)))
+    .join("");
 }
 
 function loadImage(src: string) {
