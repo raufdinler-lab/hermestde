@@ -25,12 +25,22 @@
   },
   "include": [
     "next-env.d.ts",
-    "**/*.ts",
-    "**/*.tsx",
+    "app/**/*.ts",
+    "app/**/*.tsx",
+    "next.config.ts",
     ".next/types/**/*.ts",
     ".next/dev/types/**/*.ts"
   ],
   "exclude": [
-    "node_modules"
+    "node_modules",
+    "havaistmenuqr",
+    "New project",
+    "Replygo Web",
+    "replygo-landing",
+    "replygo-landing-1",
+    "Hermest Macbook Pro",
+    "19 ocak pzt",
+    "Landings",
+    "Alternative 5"
   ]
 }

@@ -1,3 +1,18 @@
+import {
+  BadgeCheck,
+  CircleHelp,
+  Handshake,
+  HeartPulse,
+  Hospital,
+  MessageCircleHeart,
+  Package,
+  PlayCircle,
+  Route,
+  ScanSearch,
+  ShieldCheck,
+  Stethoscope,
+} from "lucide-react";
+
 const logoUrl =
   "https://cdn-ildbmmp.nitrocdn.com/TdgWISyLGRtYaNBzlwfeUBENeeEMEKEU/assets/images/optimized/rev-da5aac4/hermestclinic.com/lp/wp-content/uploads/2023/08/cropped-logo-hermest-1.png";
 
@@ -31,11 +46,16 @@ const guaranteeImages = [
 ];
 
 const clinicImages = [
-  "https://cdn-ildbmmp.nitrocdn.com/TdgWISyLGRtYaNBzlwfeUBENeeEMEKEU/assets/images/optimized/rev-da5aac4/hermestclinic.com/lp/wp-content/uploads/2024/10/galleri.webp",
   "https://cdn-ildbmmp.nitrocdn.com/TdgWISyLGRtYaNBzlwfeUBENeeEMEKEU/assets/images/optimized/rev-da5aac4/hermestclinic.com/lp/wp-content/uploads/2025/08/Rectangle-651-8-768x512.jpg",
   "https://cdn-ildbmmp.nitrocdn.com/TdgWISyLGRtYaNBzlwfeUBENeeEMEKEU/assets/images/optimized/rev-da5aac4/hermestclinic.com/lp/wp-content/uploads/2025/08/Rectangle-651-3-768x512.jpg",
   "https://cdn-ildbmmp.nitrocdn.com/TdgWISyLGRtYaNBzlwfeUBENeeEMEKEU/assets/images/optimized/rev-da5aac4/hermestclinic.com/lp/wp-content/uploads/2025/08/Rectangle-651-5-768x512.jpg",
   "https://cdn-ildbmmp.nitrocdn.com/TdgWISyLGRtYaNBzlwfeUBENeeEMEKEU/assets/images/optimized/rev-da5aac4/hermestclinic.com/lp/wp-content/uploads/2025/08/Rectangle-651-1-768x512.jpg",
+  "https://cdn-ildbmmp.nitrocdn.com/TdgWISyLGRtYaNBzlwfeUBENeeEMEKEU/assets/images/optimized/rev-da5aac4/hermestclinic.com/lp/wp-content/uploads/2025/08/Rectangle-651-6-768x512.jpg",
+  "https://cdn-ildbmmp.nitrocdn.com/TdgWISyLGRtYaNBzlwfeUBENeeEMEKEU/assets/images/optimized/rev-da5aac4/hermestclinic.com/lp/wp-content/uploads/2025/08/Rectangle-651-6-768x512.jpg",
+  "https://cdn-ildbmmp.nitrocdn.com/TdgWISyLGRtYaNBzlwfeUBENeeEMEKEU/assets/images/optimized/rev-da5aac4/hermestclinic.com/lp/wp-content/uploads/2025/08/Rectangle-651-6-768x512.jpg",
+  "https://cdn-ildbmmp.nitrocdn.com/TdgWISyLGRtYaNBzlwfeUBENeeEMEKEU/assets/images/optimized/rev-da5aac4/hermestclinic.com/lp/wp-content/uploads/2025/08/Rectangle-651-6-768x512.jpg",
+  "https://cdn-ildbmmp.nitrocdn.com/TdgWISyLGRtYaNBzlwfeUBENeeEMEKEU/assets/images/optimized/rev-da5aac4/hermestclinic.com/lp/wp-content/uploads/2025/08/Rectangle-651-6-768x512.jpg",
+  "https://cdn-ildbmmp.nitrocdn.com/TdgWISyLGRtYaNBzlwfeUBENeeEMEKEU/assets/images/optimized/rev-da5aac4/hermestclinic.com/lp/wp-content/uploads/2025/08/Rectangle-651-6-768x512.jpg",
   "https://cdn-ildbmmp.nitrocdn.com/TdgWISyLGRtYaNBzlwfeUBENeeEMEKEU/assets/images/optimized/rev-da5aac4/hermestclinic.com/lp/wp-content/uploads/2025/08/Rectangle-651-6-768x512.jpg",
 ];
 
@@ -373,7 +393,10 @@ export function HermestPage() {
           <main className="hermest-main" id="main-content">
             <section className="hero-panel section-hero" id="top">
               <div className="hero-copy">
-                <p className="section-kicker">Hermest Hair Clinic</p>
+                <p className="section-kicker section-kicker-icon">
+                  <ShieldCheck className="kicker-icon" aria-hidden="true" />
+                  <span>Hermest Hair Clinic</span>
+                </p>
                 <h1>
                   8 Jahre in Folge zur Nr. 1
                   <br />
@@ -431,7 +454,10 @@ export function HermestPage() {
             <section className="section-shell section-shell-soft section-analysis" id="form">
               <div className="section-heading-row">
                 <div>
-                  <p className="section-kicker">Analyse</p>
+                  <p className="section-kicker section-kicker-icon">
+                    <ScanSearch className="kicker-icon" aria-hidden="true" />
+                    <span>Analyse</span>
+                  </p>
                   <h2>Welche Technik ist die beste für Sie? FUE oder DHI?</h2>
                 </div>
                 <a className="button-secondary" href="#consultation">
@@ -468,7 +494,10 @@ export function HermestPage() {
             <section className="section-shell section-why" id="warum-hermest">
               <div className="section-grid">
                 <div>
-                  <p className="section-kicker">Warum Hermest</p>
+                  <p className="section-kicker section-kicker-icon">
+                    <BadgeCheck className="kicker-icon" aria-hidden="true" />
+                    <span>Warum Hermest</span>
+                  </p>
                   <h2>Warum Hermest Ihre erste Wahl sein sollte</h2>
                   <div className="stack-grid">
                     {whyCards.map((item) => (
@@ -525,7 +554,10 @@ export function HermestPage() {
             <section className="section-shell section-shell-warm section-guarantee">
               <div className="section-heading-row">
                 <div>
-                  <p className="section-kicker">Garantie</p>
+                  <p className="section-kicker section-kicker-icon">
+                    <ShieldCheck className="kicker-icon" aria-hidden="true" />
+                    <span>Garantie</span>
+                  </p>
                   <h2>
                     Mehr als nur ein Versprechen: Unsere schriftliche Garantie
                   </h2>
@@ -546,7 +578,10 @@ export function HermestPage() {
                   <img src={planningImageUrl} alt="Planungssicherheit" />
                 </figure>
                 <div>
-                  <p className="section-kicker">Planung</p>
+                  <p className="section-kicker section-kicker-icon">
+                    <HeartPulse className="kicker-icon" aria-hidden="true" />
+                    <span>Planung</span>
+                  </p>
                   <h2>Planungssicherheit für Ihre Haartransplantation</h2>
                   <p className="section-lead">
                     Was wir Ihnen vor Ihrer Operation versprechen – und
@@ -566,7 +601,10 @@ export function HermestPage() {
             <section className="section-shell section-videos">
               <div className="section-heading-row">
                 <div>
-                  <p className="section-kicker">Patientenstimmen</p>
+                  <p className="section-kicker section-kicker-icon">
+                    <PlayCircle className="kicker-icon" aria-hidden="true" />
+                    <span>Patientenstimmen</span>
+                  </p>
                   <h2>Erfahrungsberichte Unserer Patienten</h2>
                   <p className="section-lead">
                     In unseren Videos zeigen wir Ihnen nicht nur echte
@@ -597,7 +635,10 @@ export function HermestPage() {
                   <img src={doctorImageUrl} alt="Dr. Ahmet Murat" />
                 </figure>
                 <div className="dark-copy">
-                  <p className="section-kicker">Qualitätsstandard</p>
+                  <p className="section-kicker section-kicker-icon">
+                    <Stethoscope className="kicker-icon" aria-hidden="true" />
+                    <span>Qualitätsstandard</span>
+                  </p>
                   <h2>Maximale Dichte und Natürlichkeit bei der Haartransplantation</h2>
                   <blockquote className="quote-card">
                     <p>“Beste Haartransplantation in der Türkei”</p>
@@ -632,13 +673,16 @@ export function HermestPage() {
             <section className="section-shell section-clinic">
               <div className="section-heading-row">
                 <div>
-                  <p className="section-kicker">Klinik</p>
+                  <p className="section-kicker section-kicker-icon">
+                    <Hospital className="kicker-icon" aria-hidden="true" />
+                    <span>Klinik</span>
+                  </p>
                   <h2>Unsere Klinik in der Türkei</h2>
                 </div>
               </div>
               <div className="gallery-grid gallery-grid-clinic">
                 {clinicImages.map((image, index) => (
-                  <figure key={image} className="gallery-card">
+                  <figure key={`${image}-${index}`} className="gallery-card">
                     <img src={image} alt={`Klinik ${index + 1}`} />
                   </figure>
                 ))}
@@ -648,7 +692,10 @@ export function HermestPage() {
             <section className="section-shell section-results" id="vorher-nacher">
               <div className="section-heading-row">
                 <div>
-                  <p className="section-kicker">Ergebnisse</p>
+                  <p className="section-kicker section-kicker-icon">
+                    <BadgeCheck className="kicker-icon" aria-hidden="true" />
+                    <span>Ergebnisse</span>
+                  </p>
                   <h2>HAARTRANSPLANTATION VORHER-NACHER</h2>
                 </div>
                 <a className="button-secondary" href="#consultation">
@@ -667,7 +714,10 @@ export function HermestPage() {
             <section className="section-shell section-shell-price section-pricing" id="pakete">
               <div className="section-grid section-grid-pricing">
                 <div className="pricing-column">
-                  <p className="section-kicker">Pakete</p>
+                  <p className="section-kicker section-kicker-icon">
+                    <Package className="kicker-icon" aria-hidden="true" />
+                    <span>Pakete</span>
+                  </p>
                   <h2>Unsere All-Inclusive-Pakete</h2>
                   <div className="price-card">
                     <span>All-Inclusive</span>
@@ -692,7 +742,10 @@ export function HermestPage() {
             <section className="section-shell section-process">
               <div className="section-heading-row">
                 <div>
-                  <p className="section-kicker">Ablauf</p>
+                  <p className="section-kicker section-kicker-icon">
+                    <Route className="kicker-icon" aria-hidden="true" />
+                    <span>Ablauf</span>
+                  </p>
                   <h2>Ihre Haartransplantation in der Türkei Step by Step</h2>
                   <p className="section-lead">
                     In jeder Phase Ihrer Haartransplantation in der Türkei wird
@@ -717,7 +770,10 @@ export function HermestPage() {
             <section className="section-shell section-shell-consultation section-consultation" id="consultation">
               <div className="section-grid section-grid-consultation">
                 <div className="consultation-intro">
-                  <p className="section-kicker">Online-Assistent</p>
+                  <p className="section-kicker section-kicker-icon">
+                    <MessageCircleHeart className="kicker-icon" aria-hidden="true" />
+                    <span>Online-Assistent</span>
+                  </p>
                   <h2>In wenigen Klicks zum Preis</h2>
                   <p className="section-lead">
                     Mit unserem Online-Assistent in unter 3 Min.
@@ -818,7 +874,10 @@ export function HermestPage() {
             <section className="section-shell section-testimonials">
               <div className="section-heading-row">
                 <div>
-                  <p className="section-kicker">Bewertungen</p>
+                  <p className="section-kicker section-kicker-icon">
+                    <HeartPulse className="kicker-icon" aria-hidden="true" />
+                    <span>Bewertungen</span>
+                  </p>
                   <h2>Schauen Sie sich die Erfahrungen unserer Patienten an</h2>
                 </div>
               </div>
@@ -841,7 +900,10 @@ export function HermestPage() {
             <section className="section-shell section-shell-logos section-logos">
               <div className="section-heading-row">
                 <div>
-                  <p className="section-kicker">Partner</p>
+                  <p className="section-kicker section-kicker-icon">
+                    <Handshake className="kicker-icon" aria-hidden="true" />
+                    <span>Partner</span>
+                  </p>
                   <h2>Vertragspartner Institutionen</h2>
                 </div>
               </div>
@@ -857,7 +919,10 @@ export function HermestPage() {
             <section className="section-shell section-faq" id="hgf">
               <div className="section-heading-row">
                 <div>
-                  <p className="section-kicker">FAQ</p>
+                  <p className="section-kicker section-kicker-icon">
+                    <CircleHelp className="kicker-icon" aria-hidden="true" />
+                    <span>FAQ</span>
+                  </p>
                   <h2>Häufig gestellte Fragen</h2>
                   <p className="section-lead">
                     Haartransplantation in der Türkei - İstanbul
@@ -879,7 +944,10 @@ export function HermestPage() {
 
             <section className="final-callout final-callout-main">
               <div>
-                <p className="section-kicker">Fachberatung</p>
+                <p className="section-kicker section-kicker-icon">
+                  <ShieldCheck className="kicker-icon" aria-hidden="true" />
+                  <span>Fachberatung</span>
+                </p>
                 <h2>Jetzt unverbindliche Fachberatung anfordern!</h2>
               </div>
               <a className="button-primary" href="#consultation">
