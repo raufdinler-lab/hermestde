@@ -1,0 +1,16 @@
+<svg width="1200" height="1600" viewBox="0 0 1200 1600" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="1200" height="1600" fill="white"/>
+  <rect x="68" y="68" width="1064" height="1464" stroke="black" stroke-width="2"/>
+  <text x="100" y="180" fill="black" font-family="Courier New, monospace" font-size="34" letter-spacing="14">ISTANBUL / DIRECT</text>
+  <text x="1020" y="360" transform="rotate(90 1020 360)" fill="black" font-family="Georgia, serif" font-size="150" letter-spacing="-8">ISTANBUL</text>
+  <circle cx="420" cy="860" r="250" stroke="black" stroke-width="16"/>
+  <circle cx="420" cy="860" r="156" stroke="black" stroke-width="8"/>
+  <circle cx="420" cy="860" r="48" fill="black"/>
+  <rect x="760" y="720" width="180" height="18" fill="black"/>
+  <rect x="760" y="790" width="240" height="18" fill="black"/>
+  <rect x="760" y="860" width="150" height="18" fill="black"/>
+  <rect x="760" y="930" width="210" height="18" fill="black"/>
+  <rect x="760" y="1000" width="130" height="18" fill="black"/>
+  <path d="M100 1290H1100" stroke="black" stroke-width="2"/>
+  <text x="100" y="1450" fill="black" font-family="Georgia, serif" font-size="74" letter-spacing="-2">Tek muhatap.</text>
+</svg>

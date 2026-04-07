@@ -1,0 +1,12 @@
+<svg width="1200" height="1600" viewBox="0 0 1200 1600" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="1200" height="1600" fill="white"/>
+  <rect x="68" y="68" width="1064" height="1464" stroke="black" stroke-width="2"/>
+  <text x="100" y="180" fill="black" font-family="Courier New, monospace" font-size="34" letter-spacing="14">ONE PERSON / STUDIO</text>
+  <rect x="100" y="300" width="1000" height="1000" fill="black"/>
+  <rect x="192" y="392" width="816" height="816" stroke="white" stroke-width="2"/>
+  <text x="250" y="760" fill="white" font-family="Georgia, serif" font-size="140" letter-spacing="-8">One</text>
+  <text x="250" y="910" fill="white" font-family="Georgia, serif" font-size="140" letter-spacing="-8">person.</text>
+  <text x="250" y="1060" fill="white" font-family="Georgia, serif" font-size="140" letter-spacing="-8">Full</text>
+  <text x="250" y="1210" fill="white" font-family="Georgia, serif" font-size="140" letter-spacing="-8">focus.</text>
+  <text x="100" y="1450" fill="black" font-family="Courier New, monospace" font-size="30" letter-spacing="10">LIMITED CLIENTS / CLEAR OUTPUT</text>
+</svg>

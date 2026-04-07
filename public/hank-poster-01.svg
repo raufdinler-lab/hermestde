@@ -1,0 +1,16 @@
+<svg width="1200" height="1600" viewBox="0 0 1200 1600" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="1200" height="1600" fill="black"/>
+  <rect x="68" y="68" width="1064" height="1464" stroke="white" stroke-width="2"/>
+  <text x="100" y="180" fill="white" font-family="Courier New, monospace" font-size="34" letter-spacing="14">HANK / ISTANBUL</text>
+  <text x="100" y="390" fill="white" font-family="Georgia, serif" font-size="178" letter-spacing="-8">HANK</text>
+  <text x="100" y="520" fill="white" font-family="Georgia, serif" font-size="66" letter-spacing="-2">Creative</text>
+  <text x="100" y="585" fill="white" font-family="Georgia, serif" font-size="66" letter-spacing="-2">subscription</text>
+  <rect x="100" y="680" width="1000" height="620" fill="white"/>
+  <circle cx="360" cy="990" r="180" fill="black"/>
+  <rect x="620" y="830" width="360" height="26" fill="black"/>
+  <rect x="620" y="910" width="260" height="26" fill="black"/>
+  <rect x="620" y="990" width="320" height="26" fill="black"/>
+  <rect x="620" y="1070" width="220" height="26" fill="black"/>
+  <path d="M160 1270L1040 1270" stroke="black" stroke-width="2"/>
+  <text x="100" y="1435" fill="white" font-family="Courier New, monospace" font-size="30" letter-spacing="10">ONE PERSON / FULL FOCUS / NO NOISE</text>
+</svg>

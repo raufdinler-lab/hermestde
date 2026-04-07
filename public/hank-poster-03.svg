@@ -1,0 +1,15 @@
+<svg width="1200" height="1600" viewBox="0 0 1200 1600" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="1200" height="1600" fill="black"/>
+  <rect x="68" y="68" width="1064" height="1464" stroke="white" stroke-width="2"/>
+  <text x="100" y="180" fill="white" font-family="Courier New, monospace" font-size="34" letter-spacing="14">FAST / CONSISTENT</text>
+  <text x="98" y="540" fill="white" font-family="Georgia, serif" font-size="310" letter-spacing="-20">48H</text>
+  <rect x="100" y="700" width="1000" height="2" fill="white"/>
+  <rect x="100" y="860" width="1000" height="2" fill="white"/>
+  <rect x="100" y="1020" width="1000" height="2" fill="white"/>
+  <rect x="100" y="1180" width="1000" height="2" fill="white"/>
+  <text x="100" y="790" fill="white" font-family="Georgia, serif" font-size="72" letter-spacing="-3">Request in.</text>
+  <text x="100" y="950" fill="white" font-family="Georgia, serif" font-size="72" letter-spacing="-3">Work out.</text>
+  <text x="100" y="1110" fill="white" font-family="Georgia, serif" font-size="72" letter-spacing="-3">Revise if needed.</text>
+  <text x="100" y="1270" fill="white" font-family="Georgia, serif" font-size="72" letter-spacing="-3">Next one starts.</text>
+  <text x="100" y="1450" fill="white" font-family="Courier New, monospace" font-size="30" letter-spacing="10">NO MEETINGS / NO DRIFT / NO DELAY</text>
+</svg>

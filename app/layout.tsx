@@ -1,22 +1,17 @@
 import type { Metadata } from "next";
+import { Roboto } from "next/font/google";
 import "./globals.css";
 
+const roboto = Roboto({
+  subsets: ["latin", "latin-ext"],
+  variable: "--font-roboto",
+  weight: ["400", "500", "700", "900"],
+});
+
 export const metadata: Metadata = {
-  title: "Hermest Clinic Visual Consent Sheet",
-  description: "Hermest Clinic pre-procedure visual consent sheet",
-  robots: {
-    index: false,
-    follow: false,
-    nocache: true,
-    googleBot: {
-      index: false,
-      follow: false,
-      noimageindex: true,
-      "max-image-preview": "none",
-      "max-snippet": -1,
-      "max-video-preview": -1,
-    },
-  },
+  title: "Hermest Hair Clinic",
+  description:
+    "Haartransplantation in der Türkei mit Unique FUE / DHI, ALL-IN SAFETY PROTOCOL und All-Inclusive-Paketen.",
 };
 
 export default function RootLayout({
@@ -25,8 +20,10 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
-      <body>{children}</body>
+    <html lang="de">
+      <body className={roboto.variable}>
+        {children}
+      </body>
     </html>
   );
 }
